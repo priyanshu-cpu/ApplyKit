@@ -1,0 +1,91 @@
+---
+import Base from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import Card from '../components/ToolCard.astro';
+import AdSlot from '../components/AdSlot.astro';
+import {categories, examGroups, popular} from '../config/tools';
+const faq = [
+  ['Are my photos and documents uploaded anywhere?', 'ApplyKit opens and processes selected files in your browser. Your files stay on your device, including when you generate a PDF or ZIP.'],
+  ['Do I need an account to use ApplyKit?', 'Every tool is free to use without an account. Select a tool, choose your file, and download the result when it is ready.'],
+  ['Can I make an image exactly 20 KB?', 'Use the compressor to aim for a maximum of 20 KB. Exact byte sizes depend on the image and encoder. If your application also has a minimum, check both limits in the Exam Document Validator.'],
+  ['Does a passing checklist guarantee my application will be accepted?', 'The checklist tests the technical requirements you select. Application authorities may also check photo content, identity and eligibility. Verify those requirements against your current notification.'],
+  ['Can I use ApplyKit on my phone?', 'Yes. The tools run in modern mobile browsers. For large PDFs or batches, a desktop browser may have more memory.'],
+];
+const steps = [
+ {icon:'upload',name:'Select your file',description:'Drop a file into a tool, or choose one from your device.'},
+ {icon:'settings',name:'Set your requirements',description:'Enter the dimensions, size or format your application asks for.'},
+ {icon:'download',name:'Download and apply',description:'Save the result immediately and upload it to your application portal.'},
+];
+const schema = {'@context':'https://schema.org','@type':'WebSite',name:'ApplyKit',url:Astro.site?.href};
+---
+<Base title="ApplyKit — Free Image, PDF & Application Tools" description="Resize photos and signatures, merge PDFs, check exam documents and calculate eligibility. Free tools that process your files in your browser." home schema={schema}>
+  <section class="hero">
+    <div class="shell hero-grid">
+      <div class="hero-copy">
+        <div class="hero-label"><span><Icon name="clipboard" size={15}/></span> THE APPLICATION TOOLKIT</div>
+        <h1>Your applications.<br/><em>Perfectly prepared.</em></h1>
+        <p>Resize photos, compress signatures, and get your documents ready for any application. Free, fast, and private.</p>
+        <div class="hero-actions">
+          <a class="button primary hero-primary" href="#categories">Explore All Tools</a>
+          <a class="button hero-secondary" href="/exam-tools/document-assistant/"><Icon name="clipboard" size={18}/> Prepare Exam Documents</a>
+        </div>
+      </div>
+      <div class="hero-art" role="img" aria-label="Illustration showing a photo being compressed from 1.2 MB to 48 KB and checked for an application">
+        <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="art-cross cross-one">+</div><div class="art-cross cross-two">+</div><div class="art-cross cross-three">+</div>
+        <div class="art-window">
+          <div class="art-title"><span><Icon name="fileCheck" size={19}/></span><div>Application files<small>Document preparation</small></div><i></i><i></i><i></i></div>
+          <div class="art-file">
+            <div class="art-picture">
+              <svg viewBox="0 0 76 58" aria-hidden="true"><defs><linearGradient id="preview" x2="1" y2="1"><stop stop-color="#a5b4fc"/><stop offset="1" stop-color="#e0e7ff"/></linearGradient></defs><rect width="76" height="58" rx="9" fill="url(#preview)"/><circle cx="57" cy="15" r="6" fill="#fff" opacity=".8"/><path d="M0 52 24 24l17 17 10-10 25 21v6H0Z" fill="#7772ec"/><path d="m22 58 24-22 8 7 4-4 18 14v5Z" fill="#5150be"/></svg>
+            </div>
+            <div><strong>Application photo</strong><small>JPG · 300 × 400 px</small></div>
+            <span class="art-pill"><Icon name="check" size={13}/> Valid</span>
+          </div>
+          <div class="art-sizes"><div><small>ORIGINAL</small><strong>1.2 MB</strong></div><div class="art-shrink"><Icon name="minimize" size={16}/></div><div><small>COMPRESSED</small><strong>48 KB</strong></div></div>
+          <div class="art-bar"><span></span></div>
+        </div>
+        <div class="art-ready"><span><Icon name="fileCheck" size={23}/></span><div><strong>Ready to submit</strong><small>All file checks passed</small></div><Icon name="success" size={18}/></div>
+      </div>
+    </div>
+    <div class="shell trust-strip">
+      <span><Icon name="shield" size={17}/> 100% browser-based</span>
+      <span><Icon name="lock" size={17}/> No server uploads</span>
+      <span><Icon name="check" size={17}/> No registration</span>
+      <span><Icon name="zap" size={17}/> Free to use</span>
+      <span><Icon name="download" size={17}/> Instant downloads</span>
+    </div>
+  </section>
+  <AdSlot placement="home"/>
+  <section class="shell section popular" id="popular">
+    <div class="section-head">
+      <div><div class="eyebrow"><Icon name="zap" size={15}/> QUICK ACCESS</div><h2>Popular tools</h2><p>Get straight to the tools you need most.</p></div>
+      <a class="button secondary" href="#categories">Browse all tools<Icon name="right" size={17}/></a>
+    </div>
+    <div class="tool-grid">{popular.map(tool=><Card tool={tool}/>)}</div>
+  </section>
+  <section class="category-background home-deferred" id="categories">
+    <div class="shell section">
+      <div class="section-head"><div><div class="eyebrow">TOOL DIRECTORY</div><h2>Browse by category</h2><p>Find the right tool for every part of your application.</p></div></div>
+      <div class="category-grid">
+        {Object.entries(categories).map(([key,item])=><a class="category-card" href={'/'+key+'/'}><span class:list={['icon-tile',item.tone]}><Icon name={item.icon} size={22}/></span><h3>{item.name}</h3><p>{item.description}</p><span>View tools <Icon name="right" size={15}/></span></a>)}
+      </div>
+    </div>
+  </section>
+  <AdSlot placement="categories"/>
+  <section class="shell section exam-section home-deferred">
+    <div class="section-head">
+      <div><div class="eyebrow"><Icon name="clipboard" size={15}/> APPLICATION PREP</div><h2>Get ready for exam day</h2><p>Bring your latest notification and prepare the exact files your form asks for.</p></div>
+      <a class="button secondary" href="/exam-tools/document-assistant/">Open Document Assistant<Icon name="right" size={17}/></a>
+    </div>
+    <div class="exam-grid">{examGroups.map(group=><a class="exam-card" href={'/exam-tools/?group='+encodeURIComponent(group.name)}><span class="icon-tile teal"><Icon name={group.icon} size={22}/></span><div><h3>{group.name}</h3><p>{group.detail}</p></div><Icon name="right" size={18}/></a>)}</div>
+  </section>
+  <section class="category-background home-deferred"><div class="shell section">
+    <div class="section-head"><div><h2>How it works</h2><p>From your original file to a ready-to-use download in three steps.</p></div></div>
+    <ol class="steps-grid">{steps.map(step=><li><span class="icon-tile violet"><Icon name={step.icon} size={22}/></span><h3>{step.name}</h3><p>{step.description}</p></li>)}</ol>
+  </div></section>
+  <section class="shell section home-deferred privacy-section"><div class="privacy-band"><span class="icon-tile teal"><Icon name="shield" size={27}/></span><div><h2>Your files stay on your device.</h2><p>ApplyKit processes your photos, signatures, and PDFs in your browser. No document uploads or accounts are required.</p></div><a class="button secondary" href="/privacy-policy/">Privacy Policy</a></div></section>
+  <section class="shell section faq-home home-deferred">
+    <div><div class="eyebrow"><Icon name="help" size={16}/> HELP CENTER</div><h2>Frequently asked questions</h2></div>
+    <div class="faqs">{faq.map(([question,answer])=><details><summary>{question}<Icon name="plus" size={18}/></summary><p>{answer}</p></details>)}</div>
+  </section>
+</Base>

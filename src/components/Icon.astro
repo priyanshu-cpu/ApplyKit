@@ -1,0 +1,6 @@
+---
+import { icon } from './icons';
+const { name, size = 20, class: classes } = Astro.props;
+const Icon = icon(name);
+---
+<Icon size={size} strokeWidth={1.85} aria-hidden="true" className={classes} />

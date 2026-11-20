@@ -1,0 +1,12 @@
+---
+import Icon from './Icon.astro';
+import { categories, type tools } from '../config/tools';
+interface Props { tool: (typeof tools)[number] }
+const {tool} = Astro.props;
+---
+<a class="tool-card" href={tool.url}>
+  <div class="card-top"><span class:list={['icon-tile',tool.tone]}><Icon name={tool.icon} size={22} /></span><span class="card-link"><Icon name="right" size={17} /></span></div>
+  <div class="tool-category">{categories[tool.category].name}</div>
+  <h3>{tool.name}</h3>
+  <p>{tool.description}</p>
+</a>

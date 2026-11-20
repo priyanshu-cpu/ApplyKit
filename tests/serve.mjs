@@ -1,0 +1,61 @@
+// Serve the exact static output with its deployment headers during browser QA.
+import { createServer } from "node:http";
+import { readFile } from "node:fs/promises";
+import { extname, resolve, sep } from "node:path";
+
+const root = resolve("dist");
+const fileTypes = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".woff2": "font/woff2",
+  ".wasm": "application/wasm",
+  ".xml": "application/xml",
+  ".txt": "text/plain; charset=utf-8",
+};
+const configured = await readFile(resolve(root, "_headers"), "utf8");
+const headers = Object.fromEntries(
+  configured
+    .split(/\r?\n/)
+    .slice(1)
+    .filter((line) => line.startsWith("  ") && !line.includes("Cache-Control"))
+    .map((line) => {
+      const split = line.indexOf(":");
+      return [line.slice(0, split).trim(), line.slice(split + 1).trim()];
+    }),
+);
+createServer(async (req, res) => {
+  let path;
+  try {
+    path = decodeURIComponent(new URL(req.url, "http://127.0.0.1").pathname);
+  } catch {
+    res.writeHead(400, headers).end();
+    return;
+  }
+  if (path.endsWith("/")) path += "index.html";
+  const target = resolve(root, "." + path);
+  if (!target.startsWith(root + sep) || path.endsWith("/_headers")) {
+    res.writeHead(403, headers).end();
+    return;
+  }
+  try {
+    const file = await readFile(target);
+    res
+      .writeHead(200, {
+        ...headers,
+        "Content-Type":
+          fileTypes[extname(target)] || "application/octet-stream",
+        ...(path.startsWith("/_astro/")
+          ? { "Cache-Control": "public, max-age=31536000, immutable" }
+          : {}),
+      })
+      .end(file);
+  } catch {
+    res
+      .writeHead(404, { ...headers, "Content-Type": fileTypes[".html"] })
+      .end(await readFile(resolve(root, "404.html")));
+  }
+}).listen(Number(process.env.APPLYKIT_TEST_PORT || 4322), "127.0.0.1");

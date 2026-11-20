@@ -1,0 +1,132 @@
+---
+import Brand from './Brand.astro';
+import Icon from './Icon.astro';
+import {categories, tools, type Category} from '../config/tools';
+const nav = ['image-tools','pdf-tools','calculators','exam-tools'] as Category[];
+const summary = tools.map(({ name, category, keywords, description, url }) => ({ name, category, keywords, description, url }));
+---
+<header class="site-header">
+  <div class="shell header-inner">
+    <Brand />
+    <nav class="main-nav" aria-label="Main navigation">
+      <a class:list={['nav-home',{active:Astro.url.pathname==='/'}]} href="/">Home</a>
+      {nav.map(key => <details class="nav-menu">
+        <summary>{categories[key].name}<Icon name="chevron" size={13} /></summary>
+        <div class="nav-panel">
+          <a class="nav-all" href={'/'+key+'/'}>All {categories[key].name}</a>
+          {tools.filter(tool=>tool.category===key).map(tool=><a href={tool.url}><Icon name={tool.icon} size={16}/>{tool.name}</a>)}
+        </div>
+      </details>)}
+    </nav>
+    <div class="header-actions">
+      <button type="button" class="search-button" data-search-open aria-label="Search tools"><Icon name="search" size={17}/><span>Search tools</span><kbd>Ctrl K</kbd></button>
+      <button type="button" class="icon-button theme-toggle" data-theme-toggle aria-label="Toggle color theme"><Icon name="moon" class="theme-moon" size={19}/><Icon name="sun" class="theme-sun" size={19}/></button>
+      <button class="icon-button mobile-menu-button" type="button" data-menu-open aria-label="Open navigation"><Icon name="menu" size={22}/></button>
+    </div>
+  </div>
+</header>
+<dialog class="mobile-nav" aria-label="Navigation">
+  <div class="dialog-top"><Brand/><button class="icon-button" type="button" data-close aria-label="Close navigation"><Icon name="x"/></button></div>
+  <nav aria-label="Mobile navigation"><a href="/">Home</a>{nav.map(key=><details><summary>{categories[key].name}<Icon name="chevron" size={17}/></summary><a href={'/'+key+'/'}>All {categories[key].name}</a>{tools.filter(t=>t.category===key).map(t=><a href={t.url}>{t.name}</a>)}</details>)}</nav>
+</dialog>
+<dialog class="search-dialog" aria-labelledby="search-title" data-tools={JSON.stringify(summary)} data-categories={JSON.stringify(categories)}>
+  <h2 id="search-title" class="sr-only">Search ApplyKit tools</h2>
+  <div class="search-input"><Icon name="search"/><input id="tool-search" type="search" aria-label="Search tool names or keywords" placeholder="Try “compress”, “signature” or “PDF”…" autocomplete="off" autofocus/><button type="button" class="icon-button" data-close aria-label="Close search"><Icon name="x" size={19}/></button></div>
+  <div class="search-filters" aria-label="Filter results"><button type="button" data-category="" aria-pressed="true">All tools</button>{nav.map(key=><button type="button" data-category={key} aria-pressed="false">{categories[key].name}</button>)}</div>
+  <p class="search-results-title" aria-live="polite"></p><ul class="search-results"></ul>
+  <div class="search-hint"><kbd>↑</kbd> <kbd>↓</kbd> Navigate <kbd>Enter</kbd> Open <kbd>Esc</kbd> Close</div>
+</dialog>
+<script>
+  const dialogs = document.querySelectorAll<HTMLDialogElement>('dialog');
+  for (const dialog of dialogs) {
+    dialog.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+  }
+  const read = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
+  const save = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch {} };
+  const media = matchMedia('(prefers-color-scheme: dark)');
+  const applyTheme = (choice: string) => {
+    document.documentElement.dataset.theme = choice === 'system' ? (media.matches ? 'dark' : 'light') : choice;
+    document.querySelectorAll<HTMLSelectElement>('[data-theme-select]').forEach(select => { select.value = choice; });
+  };
+  applyTheme(read('applykit-theme') || 'system');
+  media.addEventListener('change', () => applyTheme(read('applykit-theme') || 'system'));
+  document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    save('applykit-theme', theme);
+    applyTheme(theme);
+  });
+  document.querySelectorAll<HTMLSelectElement>('[data-theme-select]').forEach(select => select.addEventListener('change', () => {
+    save('applykit-theme', select.value);
+    applyTheme(select.value);
+  }));
+
+  const navDetails = [...document.querySelectorAll<HTMLDetailsElement>('.nav-menu')];
+  navDetails.forEach(menu => menu.addEventListener('toggle', () => {
+    if (menu.open) navDetails.filter(other => other !== menu).forEach(other => { other.open = false; });
+  }));
+  document.addEventListener('click', e => { if (!(e.target as Element).closest('.nav-menu')) navDetails.forEach(menu => { menu.open = false; }); });
+  document.querySelector('[data-menu-open]')?.addEventListener('click', () => document.querySelector<HTMLDialogElement>('.mobile-nav')?.showModal());
+
+  type SearchTool = {name: string; category: string; keywords: string; description: string; url: string};
+  const search = document.querySelector<HTMLDialogElement>('.search-dialog')!;
+  const entries: SearchTool[] = JSON.parse(search.dataset.tools!);
+  const categories: Record<string,{name:string}> = JSON.parse(search.dataset.categories!);
+  const input = search.querySelector<HTMLInputElement>('input')!;
+  const list = search.querySelector<HTMLUListElement>('ul')!;
+  const title = search.querySelector<HTMLParagraphElement>('.search-results-title')!;
+  const filters = [...search.querySelectorAll<HTMLButtonElement>('[data-category]')];
+  let category = '';
+  let active = -1;
+  const recent = (): string[] => { try { return JSON.parse(read('applykit-recent') || '[]'); } catch { return []; } };
+  const current = entries.find(entry => entry.url === location.pathname);
+  if (current) save('applykit-recent', JSON.stringify([current.url, ...recent().filter(url => url !== current.url)].slice(0, 5)));
+
+  function render() {
+    const words = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const recentUrls = recent();
+    const showRecent = !words.length && !category && recentUrls.some(url => entries.some(tool => tool.url === url));
+    const results = showRecent ? recentUrls.flatMap(url => entries.filter(tool => tool.url === url)) : entries.filter(tool => (!category || tool.category === category) && words.every(word => (tool.name+' '+tool.keywords+' '+tool.description+' '+categories[tool.category].name).toLowerCase().includes(word)));
+    list.replaceChildren();
+    active = -1;
+    title.textContent = showRecent ? 'Recently used tools' : results.length ? results.length + ' tools' : 'No tools match. Try a different keyword.';
+    for (const tool of results) {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      const meta = document.createElement('small');
+      link.href = tool.url;
+      link.textContent = tool.name;
+      meta.textContent = categories[tool.category].name;
+      link.append(meta);
+      item.append(link);
+      list.append(item);
+    }
+  }
+  function open() {
+    if (!search.open) search.showModal();
+    input.focus();
+    input.select();
+    render();
+  }
+  document.querySelector('[data-search-open]')?.addEventListener('click', open);
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); open(); }
+    if (e.key === 'Escape') navDetails.forEach(menu => { if (menu.open) { menu.open = false; menu.querySelector('summary')?.focus(); } });
+  });
+  input.addEventListener('input', render);
+  for (const filter of filters) filter.addEventListener('click', () => {
+    category = filter.dataset.category || '';
+    filters.forEach(button => button.setAttribute('aria-pressed', String(button === filter)));
+    render();
+  });
+  search.addEventListener('keydown', e => {
+    const links = [...list.querySelectorAll('a')];
+    if (!links.length) return;
+    if (e.key === 'Enter' && e.target === input) { e.preventDefault(); links[0].click(); }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    active = links.indexOf(document.activeElement as HTMLAnchorElement);
+    active = active < 0 ? (e.key === 'ArrowDown' ? 0 : links.length - 1) : (active + (e.key === 'ArrowDown' ? 1 : -1) + links.length) % links.length;
+    links[active].focus();
+  });
+</script>

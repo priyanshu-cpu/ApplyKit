@@ -1,0 +1,7 @@
+---
+const {light = false} = Astro.props;
+---
+<a class:list={['brand', { 'brand-light': light }]} href="/" aria-label="ApplyKit home">
+  <img src="/favicon.svg" width="35" height="35" alt="" />
+  <span>Apply<span>Kit</span></span>
+</a>

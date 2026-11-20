@@ -1,0 +1,51 @@
+---
+import Base from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import ImageTool from '../../components/ImageTool';
+import PDFTool from '../../components/PDFTool';
+import ExamTool from '../../components/ExamTool';
+import Calculator from '../../components/Calculator';
+import {categories, tools} from '../../config/tools';
+import '../../styles/workspace.css';
+
+export function getStaticPaths() {
+  return tools.map(tool=>({params:{category:tool.category,slug:tool.slug},props:{tool}}));
+}
+const {tool}=Astro.props;
+const category=categories[tool.category];
+const related=[...tools.filter(t=>t.category===tool.category&&t.slug!==tool.slug),...tools.filter(t=>t.category!==tool.category)].slice(0,4);
+const categoryPath='/'+tool.category+'/';
+const absolute=(path:string)=>Astro.site ? new URL(path,Astro.site).href : undefined;
+const schema={'@context':'https://schema.org','@graph':[
+  {'@type':'WebApplication', name:tool.name, description:tool.description, applicationCategory:'UtilitiesApplication', operatingSystem:'Any', url:absolute(tool.url), offers:{'@type':'Offer',price:'0',priceCurrency:'INR'}},
+  ...(Astro.site?[{'@type':'BreadcrumbList',itemListElement:[['Home','/'],[category.name,categoryPath],[tool.name,tool.url]].map(([name,url],i)=>({'@type':'ListItem',position:i+1,name,item:absolute(url)}))}]:[]),
+]};
+---
+<Base title={tool.name} description={tool.description+' Use it free in your browser with ApplyKit.'} schema={schema}>
+  <section class="page-intro"><div class="shell">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><Icon name="right" size={14}/><a href={categoryPath}>{category.name}</a><Icon name="right" size={14}/><span aria-current="page">{tool.name}</span></nav>
+    <div class="page-title"><span class:list={['icon-tile',tool.tone]}><Icon name={tool.icon} size={22}/></span><h1>{tool.name}</h1></div>
+    <p>{tool.description}</p>
+  </div></section>
+  <section class="shell tool-area" aria-label={tool.name+' workspace'}>
+    {tool.category==='image-tools'&&<ImageTool client:load slug={tool.slug}/>}
+    {tool.category==='pdf-tools'&&<PDFTool client:load slug={tool.slug}/>}
+    {tool.category==='exam-tools'&&<ExamTool client:load validator={tool.slug==='document-validator'}/>}
+    {tool.category==='calculators'&&<Calculator client:load slug={tool.slug}/>}
+    <noscript><p class="notice error">Enable JavaScript to use the browser-based tools.</p></noscript>
+  </section>
+  <AdSlot placement="tool"/>
+  <div class="shell tool-info">
+    <section class="content-box">
+      <h2>How to use {tool.name}</h2>
+      <p>{tool.instruction}</p>
+      <h3>Practical example</h3><p>{tool.example}</p>
+      <AdSlot placement="article"/>
+      <h3>Frequently asked questions</h3>
+      <div class="faqs"><details><summary>{tool.question}<Icon name="plus" size={17}/></summary><p>{tool.answer}</p></details>
+      {tool.category!=='calculators'&&<details><summary>Where is the file processed?<Icon name="plus" size={17}/></summary><p>ApplyKit opens the selected file on your device and performs the work in your browser. The resulting file can be downloaded directly.</p></details>}</div>
+    </section>
+    <aside><div class="content-box related"><h2>Related tools</h2>{related.map(item=><a href={item.url}><Icon name={item.icon} size={17}/>{item.name}</a>)}</div><AdSlot placement="sidebar"/></aside>
+  </div>
+</Base>

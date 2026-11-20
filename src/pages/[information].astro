@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/BaseLayout.astro';
+import {ads,analytics} from '../config/ads';
+const pages={
+  about:{title:'About ApplyKit',description:'Learn why ApplyKit helps people in India prepare application documents in their browsers.'},
+  contact:{title:'Contact Us',description:'Find how to contact ApplyKit and report an issue with a tool.'},
+  'privacy-policy':{title:'Privacy Policy',description:'Learn how ApplyKit handles selected documents, local preferences, optional analytics and advertising.'},
+  terms:{title:'Terms of Use',description:'Read the basic terms for using ApplyKit’s application preparation tools.'},
+  disclaimer:{title:'Disclaimer',description:'Read about ApplyKit’s technical checks and the role of official application instructions.'},
+  guides:{title:'Application Document Guide',description:'Learn how to prepare photos, signatures, PDFs and eligibility calculations for an online application.'},
+};
+export function getStaticPaths() {
+  return ['about','contact','privacy-policy','terms','disclaimer','guides'].map(information=>({params:{information}}));
+}
+const page=Astro.params.information as keyof typeof pages;
+const {title,description}=pages[page];
+const email=import.meta.env.PUBLIC_CONTACT_EMAIL;
+const contact=typeof email==='string'&&/^[^\s@?]+@[^\s@?]+\.[^\s@?]+$/.test(email)?email:undefined;
+---
+<Base title={title} description={description}>
+  <article class="article shell">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">{title}</span></nav>
+    <h1>{title}</h1>
+    {page==='about'&&<>
+      <p>ApplyKit helps students, examination candidates and job seekers prepare files for online applications. Use it to resize an exam photo, combine PDF scans, check upload limits, or calculate age on a cutoff date.</p>
+      <h2>Tools that run on your device</h2>
+      <p>All file preparation happens in your browser. ApplyKit is free to use and has no account requirement.</p>
+      <h2>Working from official instructions</h2>
+      <p>The <a href="/exam-tools/document-assistant/">Application Document Assistant</a> supports custom criteria from any notification. Named presets identify the specific notification and the date its source was checked.</p>
+    </>}
+    {page==='contact'&&<>
+      {contact ? <p>Email <a href={'mailto:'+contact}>{contact}</a> for help or to flag an incorrect requirement.</p> : <p>This deployment has no contact address configured. If someone shared ApplyKit with you, contact the operator of that deployment.</p>}
+      <h2>What to include in a report</h2>
+      <p>Include the tool name, your browser, the steps that led to the problem, and any error message. Keep personal photos, signatures, identity documents and registration details out of your report.</p>
+      <p>For a preset correction, include the official notification link and the relevant section.</p>
+    </>}
+    {page==='privacy-policy'&&<>
+      <h2>Selected files</h2><p>ApplyKit reads and processes your selected files locally in your browser. The application does not send those files, their names or their contents to ApplyKit or analytics services. When you download a result, you control where your device saves it.</p>
+      <h2>Browser storage</h2><p>Local storage holds your theme, recent tool links and optional analytics preference. Selected files and results are kept in temporary memory. Remove a file, reset the tool, or leave the page to clear the working state. You can clear preferences using your browser’s site data settings.</p>
+      <h2>Hosting, analytics and advertising</h2><p>The hosting provider may record routine requests for pages and assets, including IP address and browser information.</p>
+      {analytics.enabled ? <p>Google Analytics loads after you opt in using Privacy preferences. It receives page usage information and can use cookies. ApplyKit sends page paths without query strings. Use Privacy preferences to withdraw consent for future visits.</p> : <p>Analytics are disabled on this deployment.</p>}
+      {ads.enabled ? <p>Google AdSense can load after the configured consent provider grants permission. Google may use browser storage and device information to serve or measure ads. Use the consent provider’s controls to manage advertising preferences.</p>:<p>Advertising is disabled on this deployment.</p>}
+      {(ads.enabled||analytics.enabled)&&<p><a href="https://policies.google.com/technologies/partner-sites">How Google uses information from partner sites</a></p>}
+      <p>Questions about this deployment’s privacy practices can be directed through <a href="/contact/">Contact Us</a>.</p>
+    </>}
+    {page==='terms'&&<>
+      <p>ApplyKit provides file preparation and calculators for lawful use. Select files you are authorized to use and check the result against your official application instructions before submission.</p>
+      <h2>Tool availability</h2><p>Tools are available as provided. Browser support and document formats can affect results. Keep your original files and review generated copies before replacing any documents.</p>
+      <h2>Application decisions</h2><p>You are responsible for what you submit. The relevant examination, admissions or recruitment authority determines whether an application meets its rules.</p>
+    </>}
+    {page==='disclaimer'&&<>
+      <p>ApplyKit is an independent toolkit. It is unaffiliated with the examination, recruitment and admissions organizations mentioned on the site.</p>
+      <h2>Verify the current notification</h2><p>Application rules can change between cycles. Check the source, dates, formatting and eligibility rules for your exact application.</p>
+      <h2>Review the content yourself</h2><p>Validation checks technical properties such as pixels, allowed formats, file size and configured PDF properties. Review photo composition, document legibility, identity, deadlines and any live capture rules yourself. Passing the technical checks does not guarantee acceptance.</p>
+    </>}
+    {page==='guides'&&<>
+      <p>Use the exact notification for your recruitment cycle or institution. Copy the technical requirements into a list before you edit any files.</p>
+      <h2>Prepare a photograph and signature</h2><p>Check the required format, width and height, and any minimum and maximum file sizes. Crop to the requested proportions before using the <a href="/image-tools/image-resizer/">Image Resizer</a>. Use the <a href="/image-tools/signature-resizer/">Signature Resizer</a> to trim blank edges, then confirm that handwriting remains legible.</p>
+      <h2>Meet a file-size range</h2><p>Keep strict pixel dimensions fixed. Use the <a href="/image-tools/image-compressor/">Image Compressor</a> to aim for the maximum and check that the output also meets any minimum. If an image has transparency and the form asks for JPG, choose a background color.</p>
+      <h2>Organize supporting scans</h2><p>Use <a href="/pdf-tools/image-to-pdf/">Image to PDF</a> for image scans. Choose the required paper size, confirm the order, and review the downloaded document. Use <a href="/pdf-tools/pdf-information/">PDF Information Checker</a> to inspect page count and dimensions.</p>
+      <h2>Check age at the cutoff date</h2><p>Enter the notification’s cutoff date in the <a href="/calculators/age-eligibility-calculator/">Age Eligibility Calculator</a>. Use the official date-of-birth range if the notice provides one.</p>
+      <h2>Review before submitting</h2><p>Open every final file and check legibility, crop and orientation. Review the <a href="/exam-tools/document-assistant/">Application Document Assistant</a> checklist and follow any instructions for live photographs in the official portal.</p>
+    </>}
+  </article>
+</Base>

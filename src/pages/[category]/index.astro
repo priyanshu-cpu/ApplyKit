@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import Card from '../../components/ToolCard.astro';
+import {categories,examGroups,tools,type Category} from '../../config/tools';
+export function getStaticPaths() {
+  return Object.keys(categories).map(category=>({params:{category}}));
+}
+const key=Astro.params.category as Category;
+const category=categories[key];
+const list=tools.filter(tool=>tool.category===key);
+---
+<Base title={category.name} description={category.description}>
+  <section class="page-intro"><div class="shell">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><Icon name="right" size={14}/><span aria-current="page">{category.name}</span></nav>
+    <div class="page-title"><span class:list={['icon-tile',category.tone]}><Icon name={category.icon} size={22}/></span><h1>{category.name}</h1></div>
+    <p>{category.description}</p>
+  </div></section>
+  <section class="shell section">
+    {key==='exam-tools'&&<div data-exam-group class="content-box mb-6" hidden>
+      {examGroups.map(group=><div data-group-name={group.name} hidden><h2>{group.name} document preparation</h2><p>Use your notification’s latest photo, signature and supporting-document instructions to set custom requirements.</p>{group.href&&<a class="text-link" href={group.href}>Visit the official organization</a>}</div>)}
+    </div>}
+    <div class="section-head"><div><h2>{category.name} directory</h2></div></div>
+    <div class="tool-grid">{list.map(tool=><Card tool={tool}/>)}</div>
+    {key==='exam-tools'&&<div class="content-box mt-6"><h2>Which requirements should I use?</h2><p>Use a verified preset only for its named recruitment notice. For another exam or admission, enter the exact requirements from the official instructions.</p><a class="text-link" href="/guides/">Application document guide</a></div>}
+  </section>
+</Base>
+<script>
+  const group=new URLSearchParams(location.search).get('group');
+  const item=[...document.querySelectorAll<HTMLElement>('[data-group-name]')].find(item=>item.dataset.groupName===group);
+  if(item){item.hidden=false;item.closest<HTMLElement>('[data-exam-group]')!.hidden=false;}
+</script>
