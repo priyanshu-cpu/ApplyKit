@@ -32,12 +32,12 @@ export const cleanName = (name: string) =>
 export const stem = (name: string) =>
   cleanName(name).replace(/\.[^.]+$/, "") || "document";
 export const kb = (bytes: number) => bytes / 1024;
-export function sizeLabel(bytes: number) {
-  return bytes < 1024
+export function sizeLabel(bytes: number, base: 1000 | 1024 = 1024) {
+  return bytes < base
     ? bytes + " B"
-    : bytes < 1024 ** 2
-      ? Number(kb(bytes).toFixed(2)) + " KB"
-      : Number((bytes / 1024 ** 2).toFixed(2)) + " MB";
+    : bytes < base ** 2
+      ? Number((bytes / base).toFixed(2)) + " KB"
+      : Number((bytes / base ** 2).toFixed(2)) + " MB";
 }
 export function detectHeader(bytes: Uint8Array): FileKind | undefined {
   const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

@@ -1,6 +1,7 @@
 import type { Output } from "../files";
 
 export type PDFCommand =
+  | { kind: "compress"; file: File }
   | { kind: "merge"; files: File[] }
   | {
       kind: "edit";

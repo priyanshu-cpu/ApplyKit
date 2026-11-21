@@ -11,6 +11,7 @@ import {
   type Output,
 } from "../lib/files";
 import { parseRanges } from "../lib/pdf/ranges";
+import CompressedPDFPreview from "./CompressedPDFPreview";
 import type { PDFDocumentProxy, readPDFInfo } from "../lib/pdf/render";
 import {
   Field,
@@ -91,7 +92,8 @@ export default function PDFTool({
   onResults?: (outputs: Output[]) => void;
 }) {
   const hydrated = useReady();
-  const merge = slug === "merge-pdf",
+  const compress = slug === "compress-pdf",
+    merge = slug === "merge-pdf",
     split = slug === "split-pdf",
     rotate = slug === "rotate-pdf",
     imagePDF = slug === "image-to-pdf",
@@ -118,6 +120,12 @@ export default function PDFTool({
   const [fit, setFit] = useState("contain");
   const [mime, setMime] = useState<ImageMime>("image/png");
   const [ppi, setPpi] = useState("144");
+  const [compression, setCompression] = useState("text");
+  const [target, setTarget] = useState("200");
+  const [unit, setUnit] = useState("KB");
+  const targetMode = compress && compression === "target";
+  const targetBytes = Math.floor(Number(target) * (unit === "KB" ? 1000 : 1000000));
+  const validTarget = Number.isSafeInteger(targetBytes) && targetBytes > 0;
   const controller = useRef<AbortController | null>(null);
   useDiscardFiles(() => {
     controller.current?.abort();
@@ -154,7 +162,7 @@ export default function PDFTool({
     setLoading(true);
     import("../lib/pdf/render")
       .then(async (lib) => {
-        opened = await lib.openPDF(first, token.signal);
+        opened = await lib.openPDF(first, token.signal, compress);
         if (token.signal.aborted) {
           void opened.loadingTask.destroy().catch(() => {});
           return;
@@ -175,7 +183,7 @@ export default function PDFTool({
       token.abort();
       if (opened) void opened.loadingTask.destroy().catch(() => {});
     };
-  }, [first, multi, information]);
+  }, [first, multi, information, compress]);
   useEffect(() => () => controller.current?.abort(), []);
   useLayoutEffect(() => {
     controller.current?.abort();
@@ -195,6 +203,9 @@ export default function PDFTool({
     fit,
     mime,
     ppi,
+    compression,
+    target,
+    unit,
   ]);
   const select = (n: number) =>
     setChosen((previous) =>
@@ -224,7 +235,41 @@ export default function PDFTool({
     };
     try {
       let next: Output[] = [];
-      if (raster && doc) {
+      let resultMessage = "";
+      if (compress && doc) {
+        let blob: Blob | undefined;
+        if (targetMode && first.size <= targetBytes) {
+          setProgress(`Your original already fits the limit (${first.size.toLocaleString()} bytes). You can submit it as is.`);
+          return;
+        }
+        if (compression !== "scan") {
+          const { runPDFEdit } = await import("../lib/pdf/edit-client");
+          const [result] = await runPDFEdit({ kind: "compress", file: first }, token.signal, progress);
+          if (result.blob.size < first.size) {
+            blob = result.blob;
+            resultMessage = "Text and image quality preserved.";
+          }
+        }
+        if (compression === "scan" || (targetMode && (!blob || blob.size > targetBytes))) {
+          const { compressScan } = await import("../lib/pdf/compress-scans");
+          const scan = await compressScan(doc, blob?.size ?? first.size, token.signal,
+            (message) => { if (!token.signal.aborted) setProgress(message); },
+            targetMode ? targetBytes : undefined);
+          if (scan) {
+            blob = scan;
+            resultMessage = "Image-only PDF. Review fine print and stamps before submitting.";
+          }
+        }
+        token.signal.throwIfAborted();
+        if (!blob || blob.size >= first.size) {
+          setProgress(targetMode ? "Target missed. The original is the smallest version found."
+            : "This mode could not make the PDF smaller. Keep your original file.");
+          return;
+        }
+        next = [{ blob, name: stem(first.name) + "-compressed.pdf" }];
+        if (targetMode) resultMessage = (blob.size <= targetBytes ? "Target met. "
+          : "Target missed. This is the smallest version found. ") + resultMessage;
+      } else if (raster && doc) {
         if (!Number.isFinite(+ppi) || +ppi < 36 || +ppi > 600)
           throw Error("Enter a resolution from 36 to 600 PPI.");
         const { renderPage } = await import("../lib/pdf/render");
@@ -291,7 +336,7 @@ export default function PDFTool({
       setOutputs(next);
       onResults?.(next);
       setProgress(
-        "Your " + (next.length === 1 ? "file is" : "files are") + " ready.",
+        resultMessage || "Your " + (next.length === 1 ? "file is" : "files are") + " ready.",
       );
     } catch (e) {
       if (!token.signal.aborted) {
@@ -306,8 +351,8 @@ export default function PDFTool({
     ? files.length > 1
     : imagePDF
       ? files.length > 0
-      : !!doc && (rotate || (split ? groups.length > 0 : chosen.length > 0));
-  const action = merge
+      : !!doc && (compress || rotate || (split ? groups.length > 0 : chosen.length > 0));
+  const action = compress ? "Compress PDF" : merge
     ? "Merge PDFs"
     : imagePDF
       ? "Generate PDF"
@@ -341,6 +386,7 @@ export default function PDFTool({
           )}
         </div>
         <FilePicker
+          sizeBase={compress ? 1000 : 1024}
           kind={imagePDF ? "image" : "pdf"}
           files={files}
           onChange={setFiles}
@@ -350,6 +396,39 @@ export default function PDFTool({
           disabled={busy}
         />
         <Notice text={readError} error />
+        {compress && (
+          <div className="fields">
+            <Field label="Compression mode" full>
+              <select value={compression} disabled={busy} onChange={(e) => setCompression(e.target.value)}>
+                <option value="text">Keep text and image quality</option>
+                <option value="target">Fit an upload limit</option>
+                <option value="scan">Smaller images for scans</option>
+              </select>
+              <small className="hint">
+                {targetMode
+                  ? "Tries to preserve the document first. If needed, it converts pages to images and adjusts resolution and quality. Image-only PDFs lose searchable text, active links and editable fields."
+                  : compression === "scan"
+                  ? "Creates image-only pages. Searchable text, active links and editable fields are lost. Check fine print before submitting."
+                  : "Keeps text selectable and embedded images at their original quality. Already optimized PDFs may stay the same size."}
+                {" "}Keep the original for digitally signed documents.
+              </small>
+            </Field>
+            {targetMode && <>
+              <Field label="Maximum file size">
+                <input type="number" min="0" step="any" value={target} disabled={busy}
+                  onChange={(e) => setTarget(e.target.value)} />
+              </Field>
+              <Field label="Size unit">
+                <select value={unit} disabled={busy} onChange={(e) => setUnit(e.target.value)}>
+                  <option>KB</option><option>MB</option>
+                </select>
+              </Field>
+              <small className="hint">{validTarget
+                ? `Maximum ${targetBytes.toLocaleString()} bytes (1 KB = 1,000 bytes).`
+                : "Enter a positive file size of at least one byte."}</small>
+            </>}
+          </div>
+        )}
         {imagePDF && (
           <div className="fields">
             <SelectField
@@ -439,7 +518,7 @@ export default function PDFTool({
             <button
               type="button"
               className="button primary"
-              disabled={busy || !ready}
+              disabled={busy || !ready || (targetMode && !validTarget)}
               onClick={run}
             >
               {action}
@@ -465,7 +544,7 @@ export default function PDFTool({
           <h2>
             {information
               ? "Document information"
-              : multi
+              : compress ? "Compression result" : multi
                 ? "Files and results"
                 : "Pages and results"}
           </h2>
@@ -478,17 +557,25 @@ export default function PDFTool({
         <Notice text={loading ? "Reading PDF…" : progress} />
         {outputs.length > 0 && (
           <div className="preview-result">
+            {compress && first && <Stats items={{
+              "Original size": sizeLabel(first.size, 1000),
+              "Compressed size": sizeLabel(outputs[0].blob.size, 1000),
+              "Exact file size": outputs[0].blob.size.toLocaleString() + " bytes",
+              "Space saved": sizeLabel(first.size - outputs[0].blob.size, 1000) + " (" +
+                ((1 - outputs[0].blob.size / first.size) * 100).toFixed(1) + "%)",
+            }} />}
             <Results
               outputs={outputs}
               zipName={outputs.length > 1 ? "applykit-pdf-results.zip" : undefined}
             />
+            {compress && <CompressedPDFPreview output={outputs[0]} />}
           </div>
         )}
         {!doc && !files.length && (
           <div className="empty-preview">
             <FileText size={34} aria-hidden="true" />
             <strong>
-              {multi ? "Your results appear here" : "Your pages appear here"}
+              {multi || compress ? "Your results appear here" : "Your pages appear here"}
             </strong>
             <span className="hint">
               {imagePDF
@@ -547,7 +634,7 @@ export default function PDFTool({
             )}
           </>
         )}
-        {doc && !information && (
+        {doc && !information && !compress && (
           <>
             <div className="actions">
               {rotate ? (

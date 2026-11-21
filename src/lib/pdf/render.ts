@@ -10,12 +10,13 @@ import { canvasOf, encode, release } from "../image/process";
 export type { PDFDocumentProxy };
 GlobalWorkerOptions.workerSrc = workerUrl;
 const assets = "/pdf-assets/";
-export async function openPDF(file: File, signal?: AbortSignal) {
+export async function openPDF(file: File, signal?: AbortSignal, stopAtErrors = false) {
   await validateFile(file, "pdf");
   const data = new Uint8Array(await file.arrayBuffer());
   signal?.throwIfAborted();
   const task = getDocument({
     data,
+    stopAtErrors,
     cMapUrl: assets + "cmaps/",
     cMapPacked: true,
     standardFontDataUrl: assets + "standard_fonts/",
@@ -58,6 +59,8 @@ export async function renderPage(
     ppi?: number;
     thumbnail?: boolean;
     mime?: ImageMime;
+    quality?: number;
+    includeAnnotations?: boolean;
     rotation?: number;
     signal?: AbortSignal;
   } = {},
@@ -80,7 +83,7 @@ export async function renderPage(
     const task = page.render({
       canvas,
       viewport,
-      annotationMode: AnnotationMode.DISABLE,
+      annotationMode: settings.includeAnnotations ? AnnotationMode.ENABLE : AnnotationMode.DISABLE,
       background: "#ffffff",
     });
     const cancel = () => task.cancel();
@@ -88,7 +91,7 @@ export async function renderPage(
     try {
       await task.promise;
       settings.signal?.throwIfAborted();
-      return await encode(canvas, settings.mime ?? "image/png", 0.93);
+      return await encode(canvas, settings.mime ?? "image/png", settings.quality ?? 0.93);
     } finally {
       settings.signal?.removeEventListener("abort", cancel);
     }

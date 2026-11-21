@@ -301,6 +301,7 @@ export function Results({
 }
 
 export function FilePicker({
+  sizeBase = 1024,
   files,
   onChange,
   kind = "image",
@@ -310,6 +311,7 @@ export function FilePicker({
   disabled = false,
 }: {
   files: File[];
+  sizeBase?: 1000 | 1024;
   onChange: (files: File[]) => void;
   kind?: "image" | "pdf" | "both";
   multiple?: boolean;
@@ -504,7 +506,7 @@ export function FilePicker({
               )}
               <div>
                 <strong>{cleanName(file.name)}</strong>
-                <small>{sizeLabel(file.size)}</small>
+                <small>{sizeLabel(file.size, sizeBase)}</small>
               </div>
               {reorder && (
                 <>

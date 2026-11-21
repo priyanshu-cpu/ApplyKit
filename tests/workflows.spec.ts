@@ -255,6 +255,61 @@ test("PDF merge, split ranges, extraction and rotation preserve intended order",
     0, 0, 90,
   ]);
 });
+test("PDF compressor reduces text and scan files and handles an optimized PDF", async ({ page }) => {
+  await go(page, "/pdf-tools/compress-pdf/");
+  const input = page.locator("input[type=file]");
+  const source = await PDFDocument.create();
+  const scan = await source.embedPng((await image(page)).buffer);
+  const cover = source.addPage([320, 220]);
+  cover.drawText("Application cover");
+  source.addPage([600, 400]).drawImage(scan, { width: 600, height: 400 });
+  const buffer = Buffer.from(await source.save({ useObjectStreams: false }));
+  await input.setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer });
+  const run = page.getByRole("button", { name: "Compress PDF", exact: true });
+  await run.click();
+  const compact = await download(page, "Download PDF");
+  expect(compact.length).toBeLessThan(buffer.length);
+  expect((await PDFDocument.load(compact)).getPages().map(p => p.getWidth())).toEqual([320, 600]);
+  await page.getByLabel("Compression mode").selectOption("scan");
+  await run.click();
+  const smaller = await download(page, "Download PDF");
+  expect(smaller.length).toBeLessThan(compact.length);
+  expect((await PDFDocument.load(smaller)).getPages().map(p => p.getSize())).toEqual([
+    { width: 320, height: 220 }, { width: 600, height: 400 },
+  ]);
+  await page.getByLabel("Compression mode").selectOption("target");
+  const limit = page.getByLabel("Maximum file size");
+  await limit.fill("0");
+  await expect(run).toBeDisabled();
+  await page.getByLabel("Size unit").selectOption("MB");
+  await limit.fill(String(buffer.length / 1000000 + 0.001));
+  await run.click();
+  await expect(page.getByText(/original already fits/)).toBeVisible();
+  await page.getByLabel("Size unit").selectOption("KB");
+  await limit.fill(String((buffer.length - 1) / 1000));
+  await run.click();
+  await expect(page.getByText(/Target met. Text and image quality preserved/)).toBeVisible();
+  await limit.fill("60");
+  await run.click();
+  await expect(page.getByText(/Target met. Image-only PDF/)).toBeVisible();
+  const fitted = await download(page, "Download PDF");
+  expect(fitted.length).toBeLessThanOrEqual(60000);
+  expect((await PDFDocument.load(fitted)).getPageCount()).toBe(2);
+  await page.getByRole("button", { name: "Preview compressed PDF" }).click();
+  await expect(page.getByRole("img", { name: "Compressed PDF page 1" })).toBeVisible();
+  await page.getByRole("button", { name: "Next page" }).click();
+  await expect(page.getByRole("img", { name: "Compressed PDF page 2" })).toBeVisible();
+  await limit.fill("1");
+  await run.click();
+  await expect(page.getByText(/Target missed/)).toBeVisible();
+  expect((await download(page, "Download PDF")).length).toBeGreaterThan(1000);
+  await page.getByLabel("Compression mode").selectOption("text");
+  await input.setInputFiles({ name: "compact.pdf", mimeType: "application/pdf", buffer: compact });
+  await run.click();
+  await expect(page.getByText(/could not make the PDF smaller/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Download PDF" })).toHaveCount(0);
+});
+
 test("PDF render, information, image import and malformed PDF handling", async ({
   page,
 }) => {

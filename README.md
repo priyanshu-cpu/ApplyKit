@@ -5,7 +5,7 @@ Everything you need before submitting an online application. ApplyKit is a stati
 ## What’s included
 
 - Eight image tools for compression, resizing, signatures, passport photos, cropping, conversion, inspection, and watermarking.
-- Seven PDF tools for merging, splitting, page extraction, rotation, image-to-PDF conversion, PDF raster export, and inspection.
+- Eight PDF tools for compression, merging, splitting, page extraction, rotation, image-to-PDF conversion, PDF raster export, and inspection.
 - A seven-step Application Document Assistant and a standalone technical validator.
 - Five calculators for age, age eligibility, marks, CGPA conversion, and date differences.
 - Tool search with Ctrl+K or Command+K, recent tool links, light and dark themes, help pages, and a static tool directory.
@@ -61,7 +61,8 @@ For Google Analytics, set `PUBLIC_ANALYTICS_ENABLED=true` and your `PUBLIC_GA_ME
 - Single passport photo files use the metadata produced by the browser encoder. PPI controls the requested pixel dimensions and physical placement in A4 PDFs. Print sheets at 100%.
 - PDF export supports ordinary static pages. Merge, split, page extraction and rotation create new PDFs from page content. Page annotations, links, interactive fields, digital signatures, and original catalog metadata may not carry over. Flat PDF pages are best for application submissions. Locked PDFs must be unlocked first.
 - Each calculator explains its conventions. Age eligibility compares whole completed years with inclusive bounds and applies only user-entered relaxation. A technical pass is one input to an application review.
-- File operations are local and resource use depends on the device. Large batches are best split into smaller groups on mobile. No PDF compression or background-removal service is included.
+- PDF Compressor supports text-preserving optimization, scan compression and a maximum size in decimal KB or MB. Target mode checks the original and compact PDF before trying JPEG page profiles from 72 to 220 PPI. It measures the finished PDF, reports missed limits, and offers a page-by-page preview of the download. Image-only output removes searchable text and interactivity. Rewriting a PDF invalidates digital signatures.
+- File operations are local and resource use depends on the device. Large batches are best split into smaller groups on mobile.
 
 ## Sources for bundled rules
 

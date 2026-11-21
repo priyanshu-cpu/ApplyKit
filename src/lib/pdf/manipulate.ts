@@ -3,11 +3,14 @@ import {
   degrees,
   endPath,
   PDFDocument,
+  PDFName,
+  PDFRawStream,
   popGraphicsState,
   pushGraphicsState,
   rectangle,
 } from "pdf-lib";
-import { limits, validateFile, type Output } from "../files";
+import { limits, stem, validateFile, type Output } from "../files";
+import { zlibSync } from "fflate";
 import { fitRect } from "../image/geometry";
 import { drawImage, encode, openImage, release } from "../image/process";
 
@@ -66,6 +69,21 @@ const output = async (pdf: PDFDocument, name: string): Promise<Output> => ({
   }),
   name,
 });
+export async function compactPDF(file: File) {
+  const pdf = await load(file);
+  const filter = PDFName.of("Filter");
+  for (const [ref, stream] of pdf.context.enumerateIndirectObjects()) {
+    if (!(stream instanceof PDFRawStream) || stream.dict.has(filter) ||
+        stream.dict.has(PDFName.of("F")) || stream.contents.length < 128) continue;
+    const compressed = zlibSync(stream.contents);
+    if (compressed.length + 24 >= stream.contents.length) continue;
+    const dict = stream.dict.clone();
+    dict.set(filter, PDFName.of("FlateDecode"));
+    pdf.context.assign(ref, PDFRawStream.of(dict, compressed));
+  }
+  return output(pdf, stem(file.name) + "-compressed.pdf");
+}
+
 export async function mergePDFs(
   files: File[],
   signal?: AbortSignal,
