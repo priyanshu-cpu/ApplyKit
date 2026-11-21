@@ -34,12 +34,14 @@ Set `APPLYKIT_BROWSER_CHANNEL=chrome` or `msedge` to use an installed desktop br
 
 ## Configure and deploy
 
+To deploy to Cloudflare Workers from this directory, run `npm run deploy`. It builds the site and publishes `dist/` to the `applykit` Worker using your Wrangler login and `wrangler.jsonc`. On a fresh checkout, install dependencies with `npm ci` first. For a local deployment check, run `npm run deploy -- --dry-run`.
+
 1. The default production origin is `https://tools.priyanshu-dev.co.in/`. Override `SITE_URL` when building for another domain. Canonical URLs, Open Graph images, the sitemap and robots.txt use this origin.
 2. Set `PUBLIC_CONTACT_EMAIL` to your support address. If Search Console asks for an HTML verification tag, copy its content string into `PUBLIC_SEARCH_CONSOLE_VERIFICATION`.
 3. Run `npm ci` and `npm run build`. Publish the contents of `dist/` at your origin’s root. Serve directory indexes and configure the host to serve `404.html` on missing paths. An application runtime is unnecessary. Use `npm run build` as the build command and `dist` as the publish directory on static hosts such as Cloudflare Pages or Netlify.
-4. Check your production origin, then submit `/sitemap-index.xml` via Search Console. ApplyKit includes `public/_headers` for hosts that support that convention. Replicate the headers in your chosen host’s configuration where applicable.
+4. Check your production origin, then submit `/sitemap.xml` via Search Console. ApplyKit includes `public/_headers` for hosts that support that convention. Replicate the headers in your chosen host’s configuration where applicable.
 
-The base content security policy permits only same-origin services and local blob workers. It includes inline scripts and styles required by the Astro output and allows WebAssembly execution for local PDF decoding. Review your host’s CSP against the actual services you enable. Transmit the site over HTTPS.
+The base content security policy permits local file processing and the Google Tag Manager and Analytics endpoints used for optional analytics. It includes inline scripts and styles required by the Astro output and allows WebAssembly execution for local PDF decoding. Review your host’s CSP against the actual services you enable. Transmit the site over HTTPS.
 
 ### Error responses
 
@@ -66,9 +68,9 @@ The included IBPS example is the archived 2025 CRP-CSA-XV notice. Its live photo
 
 ## Optional advertising and analytics
 
-The default build loads neither service. For AdSense, set a real `PUBLIC_ADS_PUBLISHER` and the numeric slot IDs you intend to use. Set `PUBLIC_ADS_ENABLED=true`. Place your Google-certified consent management platform on the site where required and wire its resolved permission to `window.__applyKitAdsConsent` for initial page load and a `CustomEvent('applykit:ads-consent', { detail: true })` for changes. On revocation, send `detail: false` and keep the refreshed permission false in your provider. The ad script and ad slots activate only with that permission. Configure the CMP, deployment CSP, and any account-specific ads.txt entry using the provider’s instructions. Ads are labelled and positioned away from download buttons.
+Advertising is disabled by default. For AdSense, set a real `PUBLIC_ADS_PUBLISHER` and the numeric slot IDs you intend to use. Set `PUBLIC_ADS_ENABLED=true`. Place your Google-certified consent management platform on the site where required and wire its resolved permission to `window.__applyKitAdsConsent` for initial page load and a `CustomEvent('applykit:ads-consent', { detail: true })` for changes. On revocation, send `detail: false` and keep the refreshed permission false in your provider. The ad script and ad slots activate only with that permission. Configure the CMP, deployment CSP, and any account-specific ads.txt entry using the provider’s instructions. Ads are labelled and positioned away from download buttons.
 
-For Google Analytics, set `PUBLIC_ANALYTICS_ENABLED=true` and your `PUBLIC_GA_MEASUREMENT_ID`, then configure your deployment CSP to allow the Analytics endpoints you use. The site exposes an opt-in preference. The integration emits a page view with a query-free URL and omits file events such as names, download contents, and metadata. Verify your configured consent behavior and privacy policy on the production origin before enabling these services.
+Google Tag Manager container `GTM-MKD43356` loads after visitors opt in through Privacy preferences. Publish a Google Analytics tag in this container to send visits to your GA4 property. Set `PUBLIC_ANALYTICS_ENABLED=false` to disable analytics, or set `PUBLIC_GTM_CONTAINER_ID` to override the container. To use direct Analytics instead, leave the container ID empty and set `PUBLIC_GA_MEASUREMENT_ID`. Keep published tags limited to the disclosed analytics purpose.
 
 ## Browser behavior and limits
 

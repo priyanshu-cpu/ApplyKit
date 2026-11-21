@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/BaseLayout.astro';
 import {ads,analytics} from '../config/ads';
+import { informationPages } from '../config/information';
 const pages={
   about:{title:'About Us',description:'Learn who ApplyKit is for and how its free browser-based tools help prepare photos, signatures and PDFs for online applications.'},
   contact:{title:'Contact Us',description:'Find how to contact ApplyKit and report an issue with a tool.'},
@@ -10,7 +11,7 @@ const pages={
   guides:{title:'Application Document Guide',description:'Learn how to prepare photos, signatures, PDFs and eligibility calculations for an online application.'},
 };
 export function getStaticPaths() {
-  return ['about','contact','privacy-policy','terms','disclaimer','guides'].map(information=>({params:{information}}));
+  return informationPages.map(information=>({params:{information}}));
 }
 const page=Astro.params.information as keyof typeof pages;
 const {title,description}=pages[page];
@@ -44,7 +45,7 @@ const schema={
       <h2>Selected files</h2><p>ApplyKit reads and processes your selected files locally in your browser. The application does not send those files, their names or their contents to ApplyKit or analytics services. When you download a result, you control where your device saves it.</p>
       <h2>Browser storage</h2><p>Local storage holds your theme, recent tool links and optional analytics preference. Selected files and results are kept in temporary memory. Remove a file, reset the tool, or leave the page to clear the working state. You can clear preferences using your browser’s site data settings.</p>
       <h2>Hosting, analytics and advertising</h2><p>The hosting provider may record routine requests for pages and assets, including IP address and browser information.</p>
-      {analytics.enabled ? <p>Google Analytics loads after you opt in using Privacy preferences. It receives page usage information and can use cookies. ApplyKit sends page paths without query strings. Use Privacy preferences to withdraw consent for future visits.</p> : <p>Analytics are disabled on this deployment.</p>}
+      {analytics.enabled ? <p>After you select Allow analytics in Privacy preferences, ApplyKit loads {analytics.container ? 'Google Tag Manager to run the site’s analytics tags' : 'Google Analytics'}. Analytics can measure page visits and use cookies. You can withdraw your preference at any time using the same control.</p> : <p>Analytics are disabled on this deployment.</p>}
       {ads.enabled ? <p>Google AdSense can load after the configured consent provider grants permission. Google may use browser storage and device information to serve or measure ads. Use the consent provider’s controls to manage advertising preferences.</p>:<p>Advertising is disabled on this deployment.</p>}
       {(ads.enabled||analytics.enabled)&&<p><a href="https://policies.google.com/technologies/partner-sites">How Google uses information from partner sites</a></p>}
       <h2>When you contact us</h2><p>If you email ApplyKit, the recipient can see your email address, your message and any attachments you send. A description of the problem is usually enough. Please leave identity documents, signatures and application numbers out of support emails.</p>

@@ -1,7 +1,7 @@
 ---
 import {ads, analytics} from '../config/ads';
 ---
-{(ads.enabled || analytics.enabled) && <div class="privacy-control" data-publisher={ads.enabled ? ads.publisher : ''} data-measurement={analytics.enabled ? analytics.measurement : ''}>
+{(ads.enabled || analytics.enabled) && <div class="privacy-control" data-publisher={ads.enabled ? ads.publisher : ''} data-container={analytics.enabled ? analytics.container : ''} data-measurement={analytics.enabled ? analytics.measurement : ''}>
   <button type="button" class="button secondary" data-privacy-open>Privacy preferences</button>
   <dialog aria-labelledby="privacy-title">
     <h2 id="privacy-title">Privacy preferences</h2>
@@ -16,7 +16,7 @@ import {ads, analytics} from '../config/ads';
 <script>
   const control = document.querySelector<HTMLElement>('.privacy-control');
   const appendScript = (url: string) => { const script = document.createElement('script'); script.async = true; script.src = url; document.head.append(script); return script; };
-  const state = window as Window & { dataLayer?: unknown[]; adsbygoogle?: unknown[]; __applyKitAdsConsent?: boolean };
+  const state = window as Window & { dataLayer?: unknown[]; gtag?: (...args: unknown[]) => void; adsbygoogle?: unknown[]; __applyKitAdsConsent?: boolean };
   if (control) {
     const dialog = control.querySelector('dialog')!;
     const check = dialog.querySelector<HTMLInputElement>('input');
@@ -26,13 +26,22 @@ import {ads, analytics} from '../config/ads';
     let analyticsLoaded = false;
     try { consent = localStorage.getItem(key) || ''; } catch {}
     const measurement = control.dataset.measurement;
+    const container = control.dataset.container;
     const publisher = control.dataset.publisher;
     const activateAnalytics = () => {
-      if (!measurement || analyticsLoaded) return;
+      if ((!container && !measurement) || analyticsLoaded) return;
       analyticsLoaded = true;
       state.dataLayer ??= [];
       function gtag(..._args: unknown[]) { state.dataLayer!.push(arguments); }
+      state.gtag = gtag;
       gtag('js', new Date());
+      if (container) {
+        gtag('set', {page_location:location.origin+location.pathname, page_referrer:''});
+        state.dataLayer.push({'gtm.start': Date.now(), event: 'gtm.js'});
+        appendScript('https://www.googletagmanager.com/gtm.js?id='+encodeURIComponent(container));
+        return;
+      }
+      if (!measurement) return;
       gtag('config', measurement, { send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false });
       gtag('event', 'page_view', {page_location:location.origin+location.pathname, page_referrer:''});
       appendScript('https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(measurement));

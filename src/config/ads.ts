@@ -15,9 +15,11 @@ export const ads = {
   },
 };
 const measurement = env.PUBLIC_GA_MEASUREMENT_ID || "";
+const container = env.PUBLIC_GTM_CONTAINER_ID ?? (measurement ? "" : "GTM-MKD43356");
 export const analytics = {
   enabled:
-    env.PUBLIC_ANALYTICS_ENABLED === "true" &&
-    /^G-[A-Z0-9]+$/.test(measurement),
+    env.PUBLIC_ANALYTICS_ENABLED !== "false" &&
+    (/^GTM-[A-Z0-9]+$/.test(container) || /^G-[A-Z0-9]+$/.test(measurement)),
+  container: /^GTM-[A-Z0-9]+$/.test(container) ? container : "",
   measurement,
 };

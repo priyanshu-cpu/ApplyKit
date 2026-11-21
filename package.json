@@ -10,6 +10,8 @@
     "dev": "astro dev",
     "check": "astro check",
     "build": "astro build",
+    "predeploy": "npm run build",
+    "deploy": "npx --yes wrangler@4.166.0 deploy",
     "preview": "astro preview",
     "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning --test tests/unit.test.ts",
     "test:browser": "playwright test"
