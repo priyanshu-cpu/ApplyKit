@@ -2,10 +2,10 @@
 import Base from '../layouts/BaseLayout.astro';
 import {ads,analytics} from '../config/ads';
 const pages={
-  about:{title:'About ApplyKit',description:'Learn why ApplyKit helps people in India prepare application documents in their browsers.'},
+  about:{title:'About Us',description:'Learn who ApplyKit is for and how its free browser-based tools help prepare photos, signatures and PDFs for online applications.'},
   contact:{title:'Contact Us',description:'Find how to contact ApplyKit and report an issue with a tool.'},
   'privacy-policy':{title:'Privacy Policy',description:'Learn how ApplyKit handles selected documents, local preferences, optional analytics and advertising.'},
-  terms:{title:'Terms of Use',description:'Read the basic terms for using ApplyKit’s application preparation tools.'},
+  terms:{title:'Terms & Conditions',description:'Read the terms for using ApplyKit, including permitted file use, checking generated documents and following application requirements.'},
   disclaimer:{title:'Disclaimer',description:'Read about ApplyKit’s technical checks and the role of official application instructions.'},
   guides:{title:'Application Document Guide',description:'Learn how to prepare photos, signatures, PDFs and eligibility calculations for an online application.'},
 };
@@ -15,9 +15,14 @@ export function getStaticPaths() {
 const page=Astro.params.information as keyof typeof pages;
 const {title,description}=pages[page];
 const email=import.meta.env.PUBLIC_CONTACT_EMAIL;
-const contact=typeof email==='string'&&/^[^\s@?]+@[^\s@?]+\.[^\s@?]+$/.test(email)?email:undefined;
+const contact=typeof email==='string'&&/^[^\s@?]+@[^\s@?]+\.[^\s@?]+$/.test(email)?email:'priyanshurajput12863@gmail.com';
+const schema={
+  '@context':'https://schema.org',
+  '@type':page==='about' ? 'AboutPage' : page==='contact' ? 'ContactPage' : 'WebPage',
+  name:title, description, url:new URL('/'+page+'/', Astro.site).href,
+};
 ---
-<Base title={title} description={description}>
+<Base title={title} description={description} schema={schema}>
   <article class="article shell">
     <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">{title}</span></nav>
     <h1>{title}</h1>
@@ -25,11 +30,12 @@ const contact=typeof email==='string'&&/^[^\s@?]+@[^\s@?]+\.[^\s@?]+$/.test(emai
       <p>ApplyKit helps students, examination candidates and job seekers prepare files for online applications. Use it to resize an exam photo, combine PDF scans, check upload limits, or calculate age on a cutoff date.</p>
       <h2>Tools that run on your device</h2>
       <p>All file preparation happens in your browser. ApplyKit is free to use and has no account requirement.</p>
+      <p>Start with <a href="/pdf-tools/compress-pdf/">PDF Compressor</a> if a portal limits the size of a document. For a portrait with required pixel dimensions, use the <a href="/image-tools/image-resizer/">Image Resizer</a>. You can review the result and download a copy before opening the application portal.</p>
       <h2>Working from official instructions</h2>
       <p>The <a href="/exam-tools/document-assistant/">Application Document Assistant</a> supports custom criteria from any notification. Named presets identify the specific notification and the date its source was checked.</p>
     </>}
     {page==='contact'&&<>
-      {contact ? <p>Email <a href={'mailto:'+contact}>{contact}</a> for help or to flag an incorrect requirement.</p> : <p>This deployment has no contact address configured. If someone shared ApplyKit with you, contact the operator of that deployment.</p>}
+      <p>For help with a tool, a correction to an exam preset, or a question about how ApplyKit handles your data, email <a href={'mailto:'+contact}>{contact}</a>.</p>
       <h2>What to include in a report</h2>
       <p>Include the tool name, your browser, the steps that led to the problem, and any error message. Keep personal photos, signatures, identity documents and registration details out of your report.</p>
       <p>For a preset correction, include the official notification link and the relevant section.</p>
@@ -41,12 +47,14 @@ const contact=typeof email==='string'&&/^[^\s@?]+@[^\s@?]+\.[^\s@?]+$/.test(emai
       {analytics.enabled ? <p>Google Analytics loads after you opt in using Privacy preferences. It receives page usage information and can use cookies. ApplyKit sends page paths without query strings. Use Privacy preferences to withdraw consent for future visits.</p> : <p>Analytics are disabled on this deployment.</p>}
       {ads.enabled ? <p>Google AdSense can load after the configured consent provider grants permission. Google may use browser storage and device information to serve or measure ads. Use the consent provider’s controls to manage advertising preferences.</p>:<p>Advertising is disabled on this deployment.</p>}
       {(ads.enabled||analytics.enabled)&&<p><a href="https://policies.google.com/technologies/partner-sites">How Google uses information from partner sites</a></p>}
-      <p>Questions about this deployment’s privacy practices can be directed through <a href="/contact/">Contact Us</a>.</p>
+      <h2>When you contact us</h2><p>If you email ApplyKit, the recipient can see your email address, your message and any attachments you send. A description of the problem is usually enough. Please leave identity documents, signatures and application numbers out of support emails.</p>
+      <p>For a question about your data, visit <a href="/contact/">Contact Us</a>.</p>
     </>}
     {page==='terms'&&<>
       <p>ApplyKit provides file preparation and calculators for lawful use. Select files you are authorized to use and check the result against your official application instructions before submission.</p>
       <h2>Tool availability</h2><p>Tools are available as provided. Browser support and document formats can affect results. Keep your original files and review generated copies before replacing any documents.</p>
       <h2>Application decisions</h2><p>You are responsible for what you submit. The relevant examination, admissions or recruitment authority determines whether an application meets its rules.</p>
+      <h2>Questions about these terms</h2><p>Use the address on the <a href="/contact/">Contact Us</a> page to ask about these terms. The <a href="/privacy-policy/">Privacy Policy</a> explains how ApplyKit handles files, browser preferences and support emails.</p>
     </>}
     {page==='disclaimer'&&<>
       <p>ApplyKit is an independent toolkit. It is unaffiliated with the examination, recruitment and admissions organizations mentioned on the site.</p>

@@ -4,9 +4,10 @@ import sitemap from "@astrojs/sitemap";
 import tailwind from "@tailwindcss/vite";
 import { loadEnv } from "vite";
 import { cp, mkdir, readFile } from "node:fs/promises";
+import { devErrors } from "./scripts/dev-error-pages.mjs";
 
 const env = loadEnv(process.env.NODE_ENV ?? "production", process.cwd(), "");
-const site = process.env.SITE_URL || env.SITE_URL;
+const site = process.env.SITE_URL || env.SITE_URL || "https://tools.priyanshu-dev.co.in/";
 const pdfAssets = ["cmaps", "standard_fonts", "wasm", "iccs"];
 const pdfLocal = {
   name: "applykit-pdf-assets",
@@ -52,11 +53,13 @@ const pdfLocal = {
 export default defineConfig({
   site: site || undefined,
   output: "static",
-  trailingSlash: "always",
+  // Let slashless requests reach the custom 404 in development too.
+  trailingSlash: process.env.NODE_ENV === "development" ? "ignore" : "always",
   devToolbar: { enabled: false },
   integrations: [
     react(),
-    ...(site ? [sitemap({ filter: (page) => !page.endsWith("/404/") })] : []),
+    devErrors,
+    ...(site ? [sitemap({ filter: (page) => !/^\/(?:errors\/|404(?:\/|\.html)?$)/.test(new URL(page).pathname) })] : []),
     pdfLocal,
   ],
   vite: { plugins: [tailwind()] },

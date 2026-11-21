@@ -73,7 +73,7 @@ test("homepage links, keyboard search, recent tools, dark mode and mobile naviga
 }) => {
   await go(page, "/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Perfectly prepared.",
+    "Free PDF compressor",
   );
   const hrefs = await page
     .locator('a[href^="/"]')

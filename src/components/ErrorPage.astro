@@ -1,0 +1,7 @@
+---
+import template from './error-document.html?raw';
+import { renderErrorDocument, type ErrorCode } from '../config/error-pages';
+interface Props { code: ErrorCode }
+const html = renderErrorDocument(template, Astro.props.code);
+---
+<Fragment set:html={html} />

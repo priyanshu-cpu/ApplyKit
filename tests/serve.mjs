@@ -27,20 +27,27 @@ const headers = Object.fromEntries(
       return [line.slice(0, split).trim(), line.slice(split + 1).trim()];
     }),
 );
+async function sendError(res, code) {
+  const path = code === 404 ? "404.html" : `errors/${code}/index.html`;
+  const body = await readFile(resolve(root, path)).catch(() => `Error ${code}`);
+  res.writeHead(code, { ...headers, "Content-Type": fileTypes[".html"], "Cache-Control": "no-store" }).end(body);
+}
 createServer(async (req, res) => {
   let path;
   try {
     path = decodeURIComponent(new URL(req.url, "http://127.0.0.1").pathname);
   } catch {
-    res.writeHead(400, headers).end();
-    return;
+    return sendError(res, 400);
   }
+  if (path.includes("\0")) return sendError(res, 400);
   if (path.endsWith("/")) path += "index.html";
   const target = resolve(root, "." + path);
   if (!target.startsWith(root + sep) || path.endsWith("/_headers")) {
-    res.writeHead(403, headers).end();
-    return;
+    return sendError(res, 403);
   }
+  if (path === "/404.html") return sendError(res, 404);
+  const errorPath = path.match(/^\/errors\/(400|403|429|500|502|503|504)\/index\.html$/);
+  if (errorPath) return sendError(res, Number(errorPath[1]));
   try {
     const file = await readFile(target);
     res
@@ -53,9 +60,8 @@ createServer(async (req, res) => {
           : {}),
       })
       .end(file);
-  } catch {
-    res
-      .writeHead(404, { ...headers, "Content-Type": fileTypes[".html"] })
-      .end(await readFile(resolve(root, "404.html")));
+  } catch (error) {
+    if (["ENOENT", "ENOTDIR", "EISDIR"].includes(error.code)) return sendError(res, 404);
+    return sendError(res, error.code === "EACCES" ? 403 : 500);
   }
 }).listen(Number(process.env.APPLYKIT_TEST_PORT || 4322), "127.0.0.1");

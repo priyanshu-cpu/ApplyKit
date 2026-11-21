@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{{code}} · {{title}} | ApplyKit</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+      body { margin: 0; background: #f7f8fc; color: #142039; }
+      main { max-width: 36rem; margin: 12vh auto; padding: 1.5rem; }
+      .brand { font-size: 1.5rem; font-weight: 750; text-decoration: none; }
+      .code { margin: 3rem 0 .5rem; font-weight: 650; }
+      h1 { margin: 0; font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.12; }
+      p { line-height: 1.6; }
+      nav { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.75rem; }
+      a { color: #4338ca; text-underline-offset: .2em; }
+      .primary { background: #4338ca; color: white; padding: .7rem 1rem; border-radius: .5rem; text-decoration: none; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #101624; color: #edf0ff; }
+        a { color: #bbb7ff; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="brand" href="/">ApplyKit</a>
+      <p class="code">Error {{code}}</p>
+      <h1>{{title}}</h1>
+      <p>{{message}}</p>
+      <nav aria-label="Recovery options">
+        <a class="primary" href="/">Go to homepage</a>
+        <a href="/#categories">Browse tools</a>
+        <a href="/contact/">Contact us</a>
+      </nav>
+    </main>
+  </body>
+</html>
+

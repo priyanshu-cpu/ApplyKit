@@ -1,0 +1,12 @@
+---
+import ErrorPage from '../../components/ErrorPage.astro';
+import { errorPages, type ErrorCode } from '../../config/error-pages';
+
+export function getStaticPaths() {
+  return Object.keys(errorPages).filter(code => code !== '404').map(code => ({
+    params: { code }, props: { code: Number(code) as ErrorCode },
+  }));
+}
+if (import.meta.env.DEV) Astro.response.status = Astro.props.code;
+---
+<ErrorPage code={Astro.props.code} />

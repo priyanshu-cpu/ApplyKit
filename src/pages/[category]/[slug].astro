@@ -14,19 +14,34 @@ export function getStaticPaths() {
 }
 const {tool}=Astro.props;
 const category=categories[tool.category];
+const searchCopy: Record<string, {title: string; description: string}> = {
+  'compress-pdf': {
+    title: 'PDF Compressor Online Free – Fit a KB or MB Limit',
+    description: 'Use the free PDF compressor to shrink scans or preserve searchable text. Set an upload limit in KB or MB, preview each page, and download the smaller PDF.',
+  },
+  'image-resizer': {
+    title: 'Photo Resizer Free Online – Resize by Pixels or Percentage',
+    description: 'Use the online photo resizer to set exact dimensions, scale by percentage, or crop a square photo for Instagram. Choose the fit and save your resized image.',
+  },
+  'passport-photo-maker': {
+    title: 'Passport Photo Resizer & A4 Photo Sheet Maker',
+    description: 'Crop a portrait to your application’s measurements, set its print resolution, and download a passport photo or a printable A4 sheet from your browser.',
+  },
+};
+const seo=searchCopy[tool.slug];
 const related=[...tools.filter(t=>t.category===tool.category&&t.slug!==tool.slug),...tools.filter(t=>t.category!==tool.category)].slice(0,4);
 const categoryPath='/'+tool.category+'/';
 const absolute=(path:string)=>Astro.site ? new URL(path,Astro.site).href : undefined;
 const schema={'@context':'https://schema.org','@graph':[
-  {'@type':'WebApplication', name:tool.name, description:tool.description, applicationCategory:'UtilitiesApplication', operatingSystem:'Any', url:absolute(tool.url), offers:{'@type':'Offer',price:'0',priceCurrency:'INR'}},
+  {'@type':'WebApplication', name:tool.name, description:seo?.description ?? tool.description, applicationCategory:'UtilitiesApplication', operatingSystem:'Any', url:absolute(tool.url), offers:{'@type':'Offer',price:'0',priceCurrency:'INR'}},
   ...(Astro.site?[{'@type':'BreadcrumbList',itemListElement:[['Home','/'],[category.name,categoryPath],[tool.name,tool.url]].map(([name,url],i)=>({'@type':'ListItem',position:i+1,name,item:absolute(url)}))}]:[]),
 ]};
 ---
-<Base title={tool.name} description={tool.description+' Use it free in your browser with ApplyKit.'} schema={schema}>
+<Base title={seo?.title ?? tool.name} description={seo?.description ?? tool.description+' Use it free in your browser with ApplyKit.'} schema={schema}>
   <section class="page-intro"><div class="shell">
     <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><Icon name="right" size={14}/><a href={categoryPath}>{category.name}</a><Icon name="right" size={14}/><span aria-current="page">{tool.name}</span></nav>
     <div class="page-title"><span class:list={['icon-tile',tool.tone]}><Icon name={tool.icon} size={22}/></span><h1>{tool.name}</h1></div>
-    <p>{tool.description}</p>
+    <p>{seo?.description ?? tool.description}</p>
   </div></section>
   <section class="shell tool-area" aria-label={tool.name+' workspace'}>
     {tool.category==='image-tools'&&<ImageTool client:load slug={tool.slug}/>}

@@ -8,7 +8,7 @@ import {categories,popular} from '../config/tools';
     <div><Brand/><p>Everything you need before submitting an online application.</p><span class="footer-private"><Icon name="shield" size={17}/> File processing stays in your browser</span></div>
     <div><h2>Explore</h2>{Object.entries(categories).map(([key,category])=><a href={'/'+key+'/'}>{category.name}</a>)}<a href="/guides/">Guides</a></div>
     <div><h2>Popular tools</h2>{popular.slice(0,4).map(tool=><a href={tool.url}>{tool.name}</a>)}</div>
-    <div><h2>ApplyKit</h2><a href="/about/">About Us</a><a href="/contact/">Contact Us</a><a href="/privacy-policy/">Privacy Policy</a><a href="/terms/">Terms of Use</a><a href="/disclaimer/">Disclaimer</a></div>
+    <div><h2>ApplyKit</h2><a href="/about/">About Us</a><a href="/contact/">Contact Us</a><a href="/privacy-policy/">Privacy Policy</a><a href="/terms/">Terms &amp; Conditions</a><a href="/disclaimer/">Disclaimer</a></div>
   </div>
   <div class="shell footer-bottom"><small>© {new Date().getFullYear()} ApplyKit</small><label class="theme-select"><Icon name="sun" size={16}/> <span class="sr-only">Color theme</span><select data-theme-select aria-label="Color theme"><option value="system">System theme</option><option value="light">Light theme</option><option value="dark">Dark theme</option></select></label></div>
 </footer>

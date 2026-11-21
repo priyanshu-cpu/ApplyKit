@@ -5,6 +5,16 @@ import Card from '../components/ToolCard.astro';
 import AdSlot from '../components/AdSlot.astro';
 import {categories, examGroups, popular} from '../config/tools';
 const faq = [
+  ['What is the best free PDF compressor for application forms?', 'Look for a compressor that lets you enter the form’s upload limit and checks the finished file against it. In ApplyKit, choose “Fit an upload limit,” enter the maximum in KB or MB, and review the result before uploading.'],
+  ['What’s the best photo resizer for my picture?', 'Choose a resizer based on the dimensions you need. ApplyKit’s Image Resizer accepts pixels or percentages for digital photos. For a printed portrait, Passport Photo Maker accepts physical measurements and can arrange copies on an A4 sheet.'],
+  ['How do I use the photo resizer?', 'Open Image Resizer and select your picture. Under “Resize by,” choose Pixels for a specific width and height, or Percentage to scale the whole picture. Turn on “Lock aspect ratio” to keep the original proportions, then generate and download the resized image.'],
+  ['What does a PDF compressor do to my pages?', 'Text-preserving compression repacks data inside the PDF and keeps text selectable. Scan compression renders each page as an image and adjusts its quality to save space. Preview small print, signatures, and stamps before submitting an image-only copy.'],
+  ['What is a PDF compressor?', 'A PDF compressor is a tool that reduces the number of bytes needed to store a PDF. A smaller copy can fit an email attachment or application upload limit while keeping the same number of pages. The possible savings depend on how the original was created.'],
+  ['What is the best PDF compressor available for scanned documents?', 'For scans, choose a tool that offers image compression and lets you inspect the result page by page. In ApplyKit, try “Smaller images for scans” and check the faintest text in the preview. If you need searchable text or editable fields, choose “Keep text and image quality.”'],
+  ['How do I compress a PDF to 200 KB?', 'Open PDF Compressor, choose “Fit an upload limit,” enter 200, and select KB. ApplyKit checks the finished PDF against 200,000 bytes. If it reports “Target missed,” the displayed file still exceeds the limit.'],
+  ['Can I use the PDF compressor online for free?', 'Yes. Open ApplyKit’s PDF Compressor in your browser, select a file from your device, choose a mode, and run compression. There is no sign-up or file upload. When a smaller version is available, use “Download PDF” to save it.'],
+  ['Which image resizer should I use for a limit in KB?', 'Use Image Compressor when a form sets a maximum file size in KB. If it also specifies a width and height, use Image Resizer to set the pixel dimensions first. Then compress the resized copy with dimensions fixed and check the result against the form’s limit.'],
+  ['How do I resize an image to 200 KB?', 'In Image Compressor, choose your photo and select the 200 KB preset. This targets a maximum of 204,800 bytes. If your form specifies exactly 200,000 bytes as its ceiling, enter 195 KB for a target of 199,680 bytes. Check the size of the output before submitting it.'],
   ['Are my photos and documents uploaded anywhere?', 'ApplyKit opens and processes selected files in your browser. Your files stay on your device, including when you generate a PDF or ZIP.'],
   ['Do I need an account to use ApplyKit?', 'Every tool is free to use without an account. Select a tool, choose your file, and download the result when it is ready.'],
   ['Can I make an image exactly 20 KB?', 'Use the compressor to aim for a maximum of 20 KB. Exact byte sizes depend on the image and encoder. If your application also has a minimum, check both limits in the Exam Document Validator.'],
@@ -16,17 +26,31 @@ const steps = [
  {icon:'settings',name:'Set your requirements',description:'Enter the dimensions, size or format your application asks for.'},
  {icon:'download',name:'Download and apply',description:'Save the result immediately and upload it to your application portal.'},
 ];
-const schema = {'@context':'https://schema.org','@type':'WebSite',name:'ApplyKit',url:Astro.site?.href};
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebSite', name: 'ApplyKit', url: Astro.site?.href },
+    {
+      '@type': 'FAQPage',
+      url: Astro.site?.href,
+      mainEntity: faq.map(([question, answer]) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: { '@type': 'Answer', text: answer },
+      })),
+    },
+  ],
+};
 ---
-<Base title="ApplyKit — Free Image, PDF & Application Tools" description="Resize photos and signatures, merge PDFs, check exam documents and calculate eligibility. Free tools that process your files in your browser." home schema={schema}>
+<Base title={'PDF Compressor Free Online & Free Photo Resizer | ApplyKit'} description="Compress a PDF to a KB or MB upload limit, resize photos to exact pixels, and prepare passport photos. Preview and download your files privately in your browser." home schema={schema}>
   <section class="hero">
     <div class="shell hero-grid">
       <div class="hero-copy">
         <div class="hero-label"><span><Icon name="clipboard" size={15}/></span> THE APPLICATION TOOLKIT</div>
-        <h1>Your applications.<br/><em>Perfectly prepared.</em></h1>
-        <p>Resize photos, compress signatures, and get your documents ready for any application. Free, fast, and private.</p>
+        <h1>Free PDF compressor<br/><em>and photo resizer.</em></h1>
+        <p>Fit a PDF to an upload limit, resize an application photo, or prepare a signature. Your files stay in your browser.</p>
         <div class="hero-actions">
-          <a class="button primary hero-primary" href="#categories">Explore All Tools</a>
+          <a class="button primary hero-primary" href="/pdf-tools/compress-pdf/">Compress a PDF</a>
           <a class="button hero-secondary" href="/exam-tools/document-assistant/"><Icon name="clipboard" size={18}/> Prepare Exam Documents</a>
         </div>
       </div>
@@ -55,6 +79,12 @@ const schema = {'@context':'https://schema.org','@type':'WebSite',name:'ApplyKit
       <span><Icon name="download" size={17}/> Instant downloads</span>
     </div>
   </section>
+  <nav class="shell site-information" aria-label="ApplyKit information">
+    <a href="/about/"><Icon name="info" size={17}/>About Us</a>
+    <a href="/privacy-policy/"><Icon name="shield" size={17}/>Privacy Policy</a>
+    <a href="/terms/"><Icon name="file" size={17}/>Terms &amp; Conditions</a>
+    <a href="/contact/"><Icon name="contact" size={17}/>Contact Us</a>
+  </nav>
   <AdSlot placement="home"/>
   <section class="shell section popular" id="popular">
     <div class="section-head">
@@ -84,8 +114,33 @@ const schema = {'@context':'https://schema.org','@type':'WebSite',name:'ApplyKit
     <ol class="steps-grid">{steps.map(step=><li><span class="icon-tile violet"><Icon name={step.icon} size={22}/></span><h3>{step.name}</h3><p>{step.description}</p></li>)}</ol>
   </div></section>
   <section class="shell section home-deferred privacy-section"><div class="privacy-band"><span class="icon-tile teal"><Icon name="shield" size={27}/></span><div><h2>Your files stay on your device.</h2><p>ApplyKit processes your photos, signatures, and PDFs in your browser. No document uploads or accounts are required.</p></div><a class="button secondary" href="/privacy-policy/">Privacy Policy</a></div></section>
+  <article class="shell section home-guide" aria-labelledby="guide-heading">
+    <h2 id="guide-heading">How to compress a PDF and resize photos for an upload</h2>
+    <p>A scholarship form might ask for a certificate under 500 KB and a portrait exactly 300 pixels wide. Those instructions call for two different adjustments. The PDF has a file size limit, while the portrait has a width requirement. Start with the original files and keep the form instructions nearby. ApplyKit lets you prepare each document in your browser, check the result, and download a copy before returning to the form.</p>
+    <h3>Choose the best free PDF compressor setting for your document</h3>
+    <p>Open the <a href="/pdf-tools/compress-pdf/">online PDF compressor</a> and select your document. For a résumé, report, or letter written in a word processor, try “Keep text and image quality” first. This setting can reduce the space used inside the PDF while keeping the text selectable. A document that has already been optimized may see little change. If the file already fits the form, you can use the original and preserve its existing quality.</p>
+    <p>For a specific ceiling, choose “Fit an upload limit.” Enter the number printed on the form and select KB or MB. For example, a 200 KB target allows up to 200,000 bytes. ApplyKit first checks the original, then tries to preserve text before adjusting scan quality and resolution. The result tells you whether the finished PDF fits. If the smallest version found is still too large, you can see the shortfall before attempting an upload.</p>
+    <h3>Check that a compressed scan is still readable</h3>
+    <p>A scanned marksheet can take more space than a typed letter because each page contains a picture. Choose “Smaller images for scans” when reducing those pictures is acceptable. Open the compressed preview and look at the smallest details on each page. Check a decimal point in a marks column, the date beside a signature, or a faint stamp. Compare anything unclear with the original before deciding which copy to submit.</p>
+    <p>Image-only pages lose searchable text, active links, and editable fields. Keep your original digitally signed PDF because rewriting the document can invalidate its signature. The results panel shows the original size, compressed size, and space saved. If a portal gives its limit in bytes, use the exact file size shown there for your final comparison.</p>
+    <h3>Resize a portrait to the dimensions on your form</h3>
+    <p>Use the <a href="/image-tools/image-resizer/">free photo resizer</a> when the instructions specify width and height in pixels. Suppose your portrait is wider than the space allowed. Choose a crop that keeps the face centered, or fit the whole picture within the requested bounds if padding is unnecessary. The online photo resizer also accepts percentages. Scaling a 1200 by 800 pixel picture to fifty percent produces a 600 by 400 pixel copy with the same proportions.</p>
+    <p>For printed photographs, the <a href="/image-tools/passport-photo-maker/">passport photo resizer</a> accepts physical dimensions and a print resolution. Enter the measurements from your application, position the portrait, and review the crop. You can download one photo for a digital form or arrange copies on an A4 sheet for printing. Check the issuing authority’s instructions for background color, head position, and framing.</p>
+    <h3>Prepare a second version for sharing</h3>
+    <p>You can also use the <a href="/image-tools/image-resizer/">photo resizer for Instagram</a> when you want a square version of a portrait or event photo. Choose equal pixel dimensions and check the edges of the crop for clipped faces or lettering. Save that version separately from your application photo. If a form specifies both dimensions and file size, use the photo resizer tool first, then open the <a href="/image-tools/image-compressor/">image compressor</a> and keep the dimensions fixed while testing the byte limit.</p>
+    <p>Before you close the form, open the downloaded files and compare their names with the upload fields. A portrait and a signature can both be JPEG files, so giving each a descriptive name helps you pick the right one on a phone. Keep the originals together for the next application, whose limits may be different.</p>
+  </article>
   <section class="shell section faq-home home-deferred">
     <div><div class="eyebrow"><Icon name="help" size={16}/> HELP CENTER</div><h2>Frequently asked questions</h2></div>
     <div class="faqs">{faq.map(([question,answer])=><details><summary>{question}<Icon name="plus" size={18}/></summary><p>{answer}</p></details>)}</div>
   </section>
 </Base>
+<style>
+  .site-information { display: flex; flex-wrap: wrap; justify-content: center; gap: .25rem 1.5rem; padding-block: .75rem; }
+  .site-information a { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; font-weight: 600; }
+  .site-information a:hover, .site-information a:focus-visible { text-decoration: underline; }
+  .home-guide { max-width: min(100% - 2rem, 76ch); }
+  .home-guide h3 { margin: 1.75rem 0 .5rem; }
+  .home-guide p { margin: .85rem 0; line-height: 1.75; }
+  .home-guide a { text-decoration: underline; text-underline-offset: .18em; }
+</style>
